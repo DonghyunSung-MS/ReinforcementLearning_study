@@ -56,14 +56,14 @@ class TwoLayerNet:
         loss = self.lastLayer.forward(y,t)
         return loss
 
-    def accuray(self, x, t):
+    def accuracy(self, x, t):
         y = self.predictByLayer(x) # probability
         y = np.argmax(y,axis = 1) # index
         if t.ndim !=1:
             t = np.argmax(t,axis = 1) # one-hot -> index
 
-        accuray = np.sum(y==t)/float(x.shape[0]) #x.shape[0] -> batch_size
-        return accuray
+        accuracy = np.sum(y==t)/float(x.shape[0]) #x.shape[0] -> batch_size
+        return accuracy
 
     def gradient(self, x, t):
         self.loss(x,t)

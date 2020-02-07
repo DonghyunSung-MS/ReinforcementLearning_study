@@ -51,14 +51,15 @@ if 1:
     test_acc_history = []
 
     #hyper parameters
-    iters_num = 20000 ## due to computing speed in my desktop
+    iters_num = 10000 ## due to computing speed in my desktop
     train_size = x_train.shape[0]
     batch_size = 100
-    learning_rate = 0.01
+    learning_rate = 0.1
 
     iter_per_epoch = max(train_size/batch_size,1)
 
     network = TwoLayerNet(input_dim = 784, hidden_dim = 50, output_dim = 10)
+    print(network.accuracy(x_train,t_train))
 
     for _ in range(iters_num):
         batch_mask = np.random.choice(train_size,batch_size) # shuffle index
@@ -70,13 +71,14 @@ if 1:
         for key in ('W1','b1','W2','b2'):
             #print(key)
             network.params[key]-=learning_rate*grad[key]
-
+            #print("gradient : "+ str(grad[key]))
         loss = network.loss(x_batch,t_batch)
+        #print("loss : " + str(loss))
         train_loss_history.append(loss)
-
+        #print()
         if _%iter_per_epoch == 0:
-            train_acc = network.accuray(x_train,t_train)
-            test_acc = network.accuray(x_test,t_test)
+            train_acc = network.accuracy(x_train,t_train)
+            test_acc = network.accuracy(x_test,t_test)
             train_acc_history.append(train_acc)
             test_acc_history.append(test_acc)
 

@@ -1,6 +1,7 @@
 import sys, os
 sys.path.append(os.pardir)
 import numpy as np
+from common.functions import *
 
 class ReluLayer:
     def __init__(self):
@@ -8,7 +9,7 @@ class ReluLayer:
 
     def forward(self, x):
         self.mask = (x<=0)
-        y = x
+        y = x.copy()
         y[self.mask] = 0 # mask 씨워서 True 를 0 으로 만든다.
         return y
 
@@ -26,7 +27,7 @@ class SigmoidLayer:
         return self.y
 
     def backward(self, rLry):
-        rLrx = rLry*self.y*(1 - self.y)
+        rLrx = rLry*self.y*(1.0 - self.y)
         return rLrx
 
 class AffineLayer:
@@ -73,8 +74,8 @@ class SoftMaxWithLoss:
         output = 0.5*np.sum((y-t)**2)
 
     def forward(self, x, t):
-        x = x - np.max(x)
-        self.y = np.exp(x)/np.sum(np.exp(x)) #softmax
+        #print("error occur? "+str(x.ndim))
+        self.y = softmax(x) #softmax
         self.t = t
         if self.lossfunction =='CE':
             self.loss = self.cross_entropy_error(self.y, self.t)
@@ -86,5 +87,10 @@ class SoftMaxWithLoss:
 
     def backward(self, dout =1):
         batch_size = self.t.shape[0]
-        rLrx = (self.y - self.t)/batch_size
+        if self.t.size == self.y.size:
+            rLrx = (self.y - self.t)/batch_size
+        else:
+            rLrx = self.y.copy()
+            rLrx[np.arrange(batch_size), self.t] -=1
+            rLrx = rLrx/batch_size
         return rLrx
