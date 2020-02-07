@@ -59,13 +59,13 @@ if 1:
     iter_per_epoch = max(train_size/batch_size,1)
 
     network = TwoLayerNet(input_dim = 784, hidden_dim = 50, output_dim = 10)
-    print(network.accuracy(x_train,t_train))
+    #print(network.accuracy(x_train,t_train))
 
     for _ in range(iters_num):
         batch_mask = np.random.choice(train_size,batch_size) # shuffle index
         x_batch = x_train[batch_mask]
         t_batch = t_train[batch_mask]
-
+        #print(x_batch)
         grad = network.gradient(x_batch, t_batch)
 
         for key in ('W1','b1','W2','b2'):
