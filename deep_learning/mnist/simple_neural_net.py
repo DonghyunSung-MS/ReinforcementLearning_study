@@ -1,16 +1,12 @@
 import sys, os
-sys.path.append('c:\\users\\sungdonghyun\\rl\\ReinforcementLearning_study\\deep_learning\\deep-learning-from-scratch')
 sys.path.append(os.pardir)
 from dataset.mnist import load_mnist
+from common.functions import *
 import numpy as np
 import pickle
 from PIL import Image
 
-def sigmoid(x):
-    return 1/(1+np.exp(-x))
-def softmax(x):
-    x = x - np.max(x)
-    return np.exp(x)/np.sum(np.exp(x))
+
 def get_data():
     (x_train,t_train), (x_test, t_test) = load_mnist(normalize=True,flatten=True,one_hot_label=False)
     return x_test, t_test
@@ -37,6 +33,7 @@ def predict(network,x):
 x, t = get_data()
 network = init_network()
 accuracy_cnt = 0
+
 # 1 batch
 for i in range(len(x)):
     y = predict(network,x)
