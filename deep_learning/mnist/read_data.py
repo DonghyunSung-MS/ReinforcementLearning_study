@@ -1,5 +1,3 @@
-import sys, os
-sys.path.append('c:\\users\\sungdonghyun\\rl\\ReinforcementLearning_study\\deep_learning\\deep-learning-from-scratch')
 from dataset.mnist import load_mnist
 import numpy as np
 from PIL import Image

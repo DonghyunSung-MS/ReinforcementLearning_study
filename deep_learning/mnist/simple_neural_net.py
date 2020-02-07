@@ -1,5 +1,3 @@
-import sys, os
-sys.path.append(os.pardir)
 from dataset.mnist import load_mnist
 from common.functions import *
 import numpy as np
