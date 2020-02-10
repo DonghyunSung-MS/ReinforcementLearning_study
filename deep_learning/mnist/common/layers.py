@@ -10,7 +10,7 @@ class ReluLayer:
     def forward(self, x):
         self.mask = (x<=0)
         y = x.copy()
-        y[self.mask] = 0 # mask 씨워서 True 를 0 으로 만든다.
+        y[self.mask] = 0
         return y
 
     def backward(self, rLry):
@@ -61,12 +61,10 @@ class SoftMaxWithLoss:
         if y.ndim == 1:
             t = t.reshape(1,t.size)
             y = y.reshape(1,y.size)
-        # 훈련 데이터가 원-핫 벡터라면 정답 레이블의 인덱스로 반환
         if t.size == y.size:
             t = np.argmax(t, axis=1)
 
         batch_size = y.shape[0]
-        # 각 미니 배치 에서 해당 레이블 인덱스만 계산해라 one hot encoding 응용
         return -np.sum(np.log(y[np.arange(batch_size), t] + 1e-7)) / batch_size
 
     def mean_square_error(y,t):

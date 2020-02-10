@@ -29,6 +29,41 @@ if 0:
         x_batch = x_train[batch_mask]
         t_batch = t_train[batch_mask]
 
+
+
+
+
+
+
+
+
+
+
+
+
+wesdafsafsdfs
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         grad = network.numerical_gradient(x_batch, t_batch)
 
         for key in ('W1','b1','W2','b2'):
