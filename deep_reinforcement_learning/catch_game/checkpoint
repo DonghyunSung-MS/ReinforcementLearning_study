@@ -1,0 +1,2 @@
+model_checkpoint_path: "/home/donghyun/RL_study/ReinforcementLearning_study/deep_reinforcement_learning/catch_game/model.ckpt"
+all_model_checkpoint_paths: "/home/donghyun/RL_study/ReinforcementLearning_study/deep_reinforcement_learning/catch_game/model.ckpt"
