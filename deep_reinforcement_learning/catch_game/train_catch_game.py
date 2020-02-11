@@ -201,6 +201,7 @@ def main(_):
             while(isGameOver !=True):
                 # s a r s' a'
                 action = -9999
+                # epsilon greedy action
                 global epsilon
                 if(randf(0,1)<=epsilon):
                     action = random.randrange(0, num_actions)
