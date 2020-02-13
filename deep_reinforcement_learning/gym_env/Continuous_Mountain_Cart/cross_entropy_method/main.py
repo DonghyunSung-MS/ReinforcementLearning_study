@@ -7,12 +7,12 @@ import gym
 
 import matplotlib.pyplot as plt
 from collections import deque
-
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 #device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 env = gym.make('MountainCarContinuous-v0')
 env.seed(101)
 np.random.seed(101)
-agent = Agent(env) #class
+agent = Agent(env,device).to(device) #class
 
 '''
 [min max]
@@ -41,7 +41,7 @@ def cem(n_iterations=500, max_t=1000, gamma=0.99, print_every=10, pop_size=50, e
         elite_idxs = rewards.argsort()[-n_elite:] # 점수 높은 그룹 인덱스 추출
         elite_weights = [weights_pop[i] for i in elite_idxs] # 인덱스에 해당하는 weight 찾기
         best_weight = np.array(elite_weights).mean(axis=0) #그들을 평균낸다.
-        reward = agent.evaluate(best_weight, gamma=1.0)
+        reward = agent.evaluate(best_weight, gamma=0.99)
         scores_deque.append(reward)
         scores.append(reward)
 
@@ -51,7 +51,7 @@ def cem(n_iterations=500, max_t=1000, gamma=0.99, print_every=10, pop_size=50, e
             print('Episode {}\tAverage Score: {:.2f}'.format(i_iteration, np.mean(scores_deque)))
 
         if np.mean(scores_deque)>=90.0:
-            print('\nEnvironment solved in {:d} iterations!\tAverage Score: {:.2f}'.format(i_iteration-100, np.mean(scores_deque)))
+            print('\nEnvironment solved in {:d} iterations!\tAverage Score: {:.2f}'.format(i_iteration, np.mean(scores_deque)))
             break
     return scores
 

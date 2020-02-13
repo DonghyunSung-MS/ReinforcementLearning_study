@@ -1,7 +1,7 @@
 # Deep Reinforcement Learning With GYM
 ## Enviroment
 * python 3.6
-* pytorch 1.1.0
+* tensorflow 1.12 or pytorch 1.1.0
 * cuda 9.0
 * OpenAI GYM
 
