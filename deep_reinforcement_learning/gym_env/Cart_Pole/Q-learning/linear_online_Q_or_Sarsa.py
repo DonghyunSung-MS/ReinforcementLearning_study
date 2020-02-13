@@ -9,13 +9,14 @@ state[4,] : [cart pos, cart vel,pole pos, pole vel] continuous
 action[1,] : discrete (0 or 1)
 linear function approximation Q(s,)[2,] = s^T W
 action = epsilon greedy w.r.t Q
+it is not working well...
 '''
 state_dim = env.observation_space.shape[0]
 action_dim = 1
 Q_dim = action_dim + 1 # 액션 스페이스 크기는 1이지만 액션이 불연속적인(discrete) 2가지 뿐이라 이대하여 모두 계산하자
 epsilon = 0.9
 epsilon_decay = 0.8
-lr = 0.0001
+lr = 0.0005
 gamma = 0.99
 actions = [0,1]
 iterations = 10000
@@ -41,7 +42,9 @@ for i in range(iterations):
         action = e_greedy(Q)
         #print(action)
         next_state, reward, done, info = env.step(action)
-        TD_target = reward + gamma*(1-int(done))*np.dot(next_state,weights)
+        #TD_target = (reward + gamma*(1-int(done))*max(np.dot(next_state,weights))) # Q-Learning
+        #TD_target = np.array([TD_target,TD_target])
+        TD_target = reward + gamma*(1-int(done))*np.dot(next_state,weights) # SARSA
         weights = weights + lr*np.outer(state,(TD_target - Q).reshape(-1,1))
         state = next_state
         Q = np.dot(state,weights)
@@ -53,11 +56,3 @@ plt.plot(loss_history)
 plt.xlabel("epoch")
 plt.ylabel("loss")
 plt.show()
-
-Q = np.dot(state,weights)
-env.reset()
-
-while not done:
-    action = e_greedy(Q)
-    env.render()
-    next_state, reward, done, info = env.step(action)
