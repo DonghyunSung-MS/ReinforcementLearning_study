@@ -71,7 +71,7 @@ class Actor(nn.Module):
         self.policy_mlp = mlp(self.policy_sizes,activation,nn.Tanh) #-1 to 1
         self.action_limit = action_limit
     def forward(self, observation):
-        observation = observation.to(self.device)
+        observation = observation
         return self.action_limit*self.policy_mlp(observation) # scale to action_limit
 
 # o, a ---> Q structure
@@ -83,12 +83,12 @@ class Critic(nn.Module):
         self.Q_mlp = mlp(self.Q_sizes,activation)
     def forward(self, observation, action):
         inputs = torch.cat([observation, action], dim = -1)
-        inputs = inputs.to(self.device)
+        inputs = inputs
         Q_out = self.Q_mlp(inputs)
         return torch.squeeze(Q_out,-1)
 
 # contain Actor and Critic
-class Agent(nn.Module):
+class AC_Agent(nn.Module):
     def __init__(self, env, device, hidden_sizes=(256,256), activation=nn.ReLU):
         super().__init__()
         self.device = device
@@ -100,7 +100,6 @@ class Agent(nn.Module):
         self.critic = Critic(self.observation_size, self.action_size, hidden_sizes, activation, self.device)
 
     def act(self, observation):
-        observation = observation.to(device)
         with torch.no_grad():
             return self.actor(observation)
 
@@ -114,59 +113,25 @@ class ReplayBuffer: #priority Queue based on MSBE or random access memory
         self.action = np.zeros((self.memory_size, self.action_size)).astype(np.float32)
         self.reward = np.zeros((self.memory_size, 1)).astype(np.float32)
         self.next_observation = np.zeros((self.memory_size, self.observation_size)).astype(np.float32)
-        self.done = np.zeros((self.memory_size, 1)).astype(np.bool)
+        self.done = np.zeros((self.memory_size, 1)).astype(np.float32)
         self.count = 0
 
-    def save_batch(self, samples,mini_batch_size):
-        for i in range(mini_batch_size): # s a r s 'done
-            self.count = self.count%self.memory_size
-            self.observation[self.count, :] = samples[0][i,:]
-            self.action[self.count, :] = samples[1][i,:]
-            self.reward[self.count] = samples[2][i,:]
-            self.next_observation[self.count, :] = samples[3][i,:]
-            self.done[self.count] = samples[4][i,:]
-            self.count+=1
+    def save_sample(self, samples):
+        self.count = self.count%self.memory_size
+        self.observation[self.count, :] = samples[0]
+        self.action[self.count, :] = samples[1]
+        self.reward[self.count] = samples[2]
+        self.next_observation[self.count, :] = samples[3]
+        self.done[self.count] = samples[4]
+        self.count+=1
 
 
 
     def sample_batch(self,mini_batch_size):
         indices = np.random.choice(self.memory_size, mini_batch_size)
-        s = self.observation[indices, :]
+        o = self.observation[indices, :]
         a = self.action[indices, :]
         r = self.reward[indices]
-        s_ = self.next_observation[indices, :]
+        o_ = self.next_observation[indices, :]
         d = self.done[indices]
-        return (s,a,r,s_,d)
-
-
-
-
-import gym
-env = gym.make('MountainCarContinuous-v0')
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(device)
-agent = Agent(env, device).to(device)
-print(agent.act(torch.randn(10,2))) # *******batch (mini_batch, input_dim)
-
-
-
-mini_batch_size = 3
-buffer = ReplayBuffer(env,memory_size=10)
-for _ in range(100):
-    samples = (np.random.randn(mini_batch_size,2).astype(np.float32),
-               np.random.randn(mini_batch_size,1).astype(np.float32),
-               np.random.randn(mini_batch_size,1).astype(np.float32),
-               np.random.randn(mini_batch_size,2).astype(np.float32),
-               np.random.randn(mini_batch_size,1).astype(np.bool))
-    buffer.save_batch(samples,mini_batch_size)
-
-s,a,r,s_,d = buffer.sample_batch(mini_batch_size)
-print(s)
-print()
-print(a)
-print()
-print(r)
-print()
-print(s_)
-print()
-print(d)
+        return (o, a, r, o_, d)
