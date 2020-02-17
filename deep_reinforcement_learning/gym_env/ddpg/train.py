@@ -3,13 +3,16 @@ import sys,os
 sys.path.append(os.pardir)
 from  ddpg.class_NN import *
 from copy import deepcopy
+import csv
+import time
 
 import gym
 from torch.optim import Adam
-
+file=open('../ddpg/ddpg.csv','w',newline='')
+writer = csv.writer(file)
 env = gym.make('MountainCarContinuous-v0')
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-save_every = 1#1000
+save_every = 1000
 #---------------------------- Hyperparameters---------------------------------
 policy_lr = 1e-3
 q_lr = 1e-3
@@ -17,17 +20,17 @@ q_lr = 1e-3
 rho = 0.995 #polyak
 gamma = 0.99 #discount factor
 
-buffer_size = 20#int(1e6) #replaybuffer
-batch_size = 10#100
+buffer_size = int(1e6) #replaybuffer
+batch_size = 100
 
-update_after = 10#1000
-update_every = 2#50
+update_after = 1000
+update_every = 50
 
-max_ep_len = 100#1000
-steps_per_epoch = 10#4000
+max_ep_len = 1000
+steps_per_epoch = 4000
 epochs = 100
 
-start_steps = 2#10000
+start_steps = 10000
 act_noise = 0.1
 #--------------------------------Algorithm--------------------------------------
 def ddpg(env, agent=AC_Agent):
@@ -40,8 +43,8 @@ def ddpg(env, agent=AC_Agent):
 
     act_limit = env.action_space.high[0]
 
-    ac = agent(env, device) #main
-    target_ac = deepcopy(ac) #target
+    ac = agent(env, device).float() #main
+    target_ac = deepcopy(ac).float() #target
 
     for p in target_ac.parameters():
         p.requires_grad_(False)
@@ -105,6 +108,7 @@ def ddpg(env, agent=AC_Agent):
                 p_target.data.add_((1 - rho)*p.data)
 
     def get_action(o, noise_scale):
+        o = torch.from_numpy(o)
         a = ac.act(o)
         a += noise_scale * np.random.randn(act_dim)
         return np.clip(a, -act_limit, act_limit)
@@ -127,15 +131,22 @@ def ddpg(env, agent=AC_Agent):
         replay_buffer.save_sample((o,a,r,o_,float(int(d))))
 
         o = o_
-
+        if d or (ep_len==max_ep_len):
+            writer.writerow([ep_ret,ep_len])
+            o, ep_ret, ep_len = env.reset(), 0, 0
+            print()
         if t>=update_after and t % update_every==0:
-            print("t: {},ep_ret: {},ep_len: {}").format(t,ep_ret,ep_len)
+            print("t: {}\tep_ret: {:0.4f}\t,ep_len: {}".format(t,ep_ret,ep_len))
             for _ in range(update_every):
                 batch = replay_buffer.sample_batch(batch_size)
                 update(batch)
 
         if t%save_every==0:
-            torch.save(ac,'../ddpg.pth')
+            torch.save(ac,'../ddpg/ddpg.pth')
+
 
 if __name__=='__main__':
+    start = time.time()
     ddpg(env)
+    end = time.time()-start
+    print(end)
