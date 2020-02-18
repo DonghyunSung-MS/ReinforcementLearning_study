@@ -68,10 +68,10 @@ class Actor(nn.Module):
         super().__init__()
         self.device = device
         self.policy_sizes = [observation_size] + list(hidden_sizes) + [action_size]
-        self.policy_mlp = mlp(self.policy_sizes,activation,nn.Tanh).float() #-1 to 1
+        self.policy_mlp = mlp(self.policy_sizes,activation,nn.Tanh).float().to(device) #-1 to 1
         self.action_limit = action_limit
     def forward(self, observation):
-        observation = observation.float()
+        observation = observation.float().to(self.device)
         return self.action_limit*self.policy_mlp(observation) # scale to action_limit
 
 # o, a ---> Q structure
@@ -80,9 +80,9 @@ class Critic(nn.Module):
         super().__init__()
         self.device = device
         self.Q_sizes = [observation_size + action_size] + list(hidden_sizes) + [1]
-        self.Q_mlp = mlp(self.Q_sizes,activation).float()
+        self.Q_mlp = mlp(self.Q_sizes,activation).float().to(device)
     def forward(self, observation, action):
-        inputs = torch.cat([observation, action], dim = -1).float()
+        inputs = torch.cat([observation, action], dim = -1).float().to(self.device)
         Q_out = self.Q_mlp(inputs)
         return torch.squeeze(Q_out,-1)
 
@@ -95,8 +95,8 @@ class AC_Agent(nn.Module):
         self.action_size = env.action_space.shape[0]
         self.action_limit = env.action_space.high[0]
 
-        self.actor = Actor(self.observation_size, self.action_size, hidden_sizes, activation, self.action_limit, self.device).float()
-        self.critic = Critic(self.observation_size, self.action_size, hidden_sizes, activation, self.device).float()
+        self.actor = Actor(self.observation_size, self.action_size, hidden_sizes, activation, self.action_limit, self.device).float().to(device)
+        self.critic = Critic(self.observation_size, self.action_size, hidden_sizes, activation, self.device).float().to(device)
 
     def act(self, observation):
         with torch.no_grad():
