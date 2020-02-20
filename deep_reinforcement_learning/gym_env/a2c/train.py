@@ -24,7 +24,7 @@ parser.add_argument('--goal_score', type=int, default=400)
 parser.add_argument('--max_iter_num', type=int, default=1000)
 parser.add_argument('--log_interval', type=int, default=10)
 parser.add_argument('--logdir', default='./logs')
-parser.add_argument('--save_path',default='./model')
+parser.add_argument('--save_path',default='./model/')
 args = parser.parse_args()
 
 #device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
