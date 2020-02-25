@@ -5,6 +5,7 @@ import argparse
 import numpy as np
 from collections import deque
 sys.path.append(os.pardir)
+from common.Tensorboard2Csv import board2csv
 
 import torch
 import torch.nn as nn
@@ -126,4 +127,6 @@ def a2c():
             break
 
 if __name__=='__main__':
-    a2c()
+    #a2c()
+    #print()
+    board2csv(os.getcwd(),os.listdir(args.logdir),'a2c')
