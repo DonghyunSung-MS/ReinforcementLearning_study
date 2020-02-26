@@ -1,6 +1,6 @@
 from tensorboard.backend.event_processing import event_accumulator
 import pandas as pd
-import sys
+import sys, os
 def board2csv(current_directory, file_names, algo):
     #sys.path.append(current_directory)
     print(current_directory)
@@ -9,4 +9,7 @@ def board2csv(current_directory, file_names, algo):
         ea.Reload()
         tags = ea.Tags()
         for j, tag in enumerate(tags['scalars']):
-            pd.DataFrame(ea.Scalars(tag)).to_csv(current_directory+'/csv_log/'+str(i+1)+'_'+str(j+1)+'_train.csv')
+            path = current_directory+'/csv_log'
+            if not os.path.isdir(path):
+                os.makedirs(path)
+            pd.DataFrame(ea.Scalars(tag)).to_csv(path+'/'+str(i+1)+'_'+str(j+1)+'_train.csv')
