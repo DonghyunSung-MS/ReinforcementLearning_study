@@ -15,13 +15,13 @@ from common.Tensorboard2Csv import board2csv
 from common.function import *
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--env_name', type=str, default="Pendulum-v0")
+parser.add_argument('--env_name', type=str, default="Walker2d-v2")
 parser.add_argument('--hidden_sizes', type=list, default=[64, 64])
 parser.add_argument('--critic_lr', type=float, default=1e-3)
 parser.add_argument('--gamma', type=float, default=0.99)
-parser.add_argument('--goal_score', type=int, default=-300)
+parser.add_argument('--goal_score', type=int, default=10000)
 parser.add_argument('--max_kl', type=float, default=1e-2)
-parser.add_argument('--max_iter_num', type=int, default=500)
+parser.add_argument('--max_iter_num', type=int, default=1000000)
 parser.add_argument('--total_sample_size', type=int, default=2048)
 parser.add_argument('--logdir', default='./logs')
 parser.add_argument('--save_path',default='./model/')
@@ -95,7 +95,7 @@ def trpo(seed_number):
     print(args.env_name)
     print('State  dimension : ', obs_dim)
     print('Action dimension : ', act_dim)
-    print('Action   limit   : ', action_limit[0],' ', action_limit[1])
+    print('Action   limit   : ', action_limit,' ', action_limit)
     print('=====================================================================')
     print()
 
@@ -120,6 +120,7 @@ def trpo(seed_number):
             obs = env.reset()
 
             while not done:
+                #env.render()
                 steps += 1
                 mu, std = actor(torch.from_numpy(obs).float().to(device))
                 act = actor.get_action(mu, std)
@@ -145,12 +146,12 @@ def trpo(seed_number):
             if not os.path.isdir(args.save_path):
                 os.makedirs(args.save_path)
 
-            ckpt_path = args.save_path +'seed_number_'+'model.pth.tar'
+            ckpt_path = args.save_path +str(args.env_name)+'_'+str(seed_number)+'_'+'model.pth.tar'
             torch.save(actor.state_dict(), ckpt_path)
-            print('Recent rewards exceed -300. So end')
+            print('Recent rewards exceed'+str(args.goal_score)+' . So end')
             break
 
 if __name__=='__main__':
     for i in range(5):
         trpo(i*10)
-    board2csv(os.getcwd(),os.listdir(args.logdir),'trpo')
+    board2csv(os.getcwd(),os.listdir(args.logdir),'trpo',args)
