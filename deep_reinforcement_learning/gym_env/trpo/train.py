@@ -60,7 +60,7 @@ def update(actor, critic, critic_optimizer, trajectories, obs_dim, act_dim):
     actor_loss = surrogate_loss(actor, values, targets, obs_samples, old_policy.detach(), act_samples)
 
     # gradient of surrogate_loss
-    actor_loss_grad = torch.autograd.grad(actor_loss, actor.parameters())
+    actor_loss_grad = torch.autograd.grad(actor_loss, actor.parameters()) #del L
     actor_loss_grad = flat_grad(actor_loss_grad)
 
 
