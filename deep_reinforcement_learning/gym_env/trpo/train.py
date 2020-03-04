@@ -47,9 +47,9 @@ def update(actor, critic, critic_optimizer, trajectories, obs_dim, act_dim):
     criterion = torch.nn.MSELoss()
 
     values = critic(torch.from_numpy(obs_samples).float().to(device))
-    targets = return_samples.unsqueeze(1).to(device)
+    targets = return_samples.unsqueeze(1).to(device) #reinforece
 
-    critic_loss = criterion(values, targets)
+    critic_loss = criterion(values, targets) #(R-V(s))*grad(V)
     critic_optimizer.zero_grad()
     critic_loss.backward()
     critic_optimizer.step()
