@@ -29,7 +29,15 @@ def surrogate_loss(actor, values, targets, obs_samples, old_policy, act_samples)
 
     surrogate_loss = (torch.exp(new_policy - old_policy) * advantages).mean() #E[pi/mu*A]
     return surrogate_loss
+def batch_surrogate_loss(actor, values, targets, states, old_policy, actions, batch_index):
+    mu, std = actor(torch.Tensor(states))
+    new_policy = actor.get_log_prob(actions, mu, std)
 
+    old_policy = old_policy[batch_index]
+    ratio = torch.exp(new_policy - old_policy)
+    advantages = targets - values
+    surrogate_loss = ratio * advantages
+    return surrogate_loss, ratio, advantages
 def flat_grad(grads):
     grad_flatten = []
     for grad in grads:
