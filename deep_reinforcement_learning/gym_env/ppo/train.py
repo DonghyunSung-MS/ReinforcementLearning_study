@@ -159,8 +159,10 @@ def main(seed_num):
             if not os.path.isdir(args.save_path):
                 os.makedirs(args.save_path)
 
-            ckpt_path = args.save_path + 'model.pth.tar'
-            torch.save(actor.state_dict(), ckpt_path)
+            ckpt_path_a = args.save_path + 'model_a.pth.tar'
+            ckpt_path_c = args.save_path + 'model_c.pth.tar'
+            torch.save(actor.state_dict(), ckpt_path_a)
+            torch.save(critic.state_dict(), ckpt_path_c)
             print('Recent rewards exceed -300. So end')
             break
 
