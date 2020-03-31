@@ -7,10 +7,10 @@ from model import Actor
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--env_name", type=str, default="Pendulum-v0")
-parser.add_argument("--load_model", type=str, default="./save_model/model.pth.tar")
+parser.add_argument("--load_model", type=str, default="./save_model/Pendulum/actor/10th_model_a.pth.tar")
 parser.add_argument('--log_interval', type=int, default=5)
 parser.add_argument('--test_iter', type=int, default=1000)
-parser.add_argument('--hidden_size', type=int, default=64)
+parser.add_argument('--hidden_size', type=int, default=128)
 args = parser.parse_args()
 
 def test():
@@ -33,8 +33,8 @@ def test():
         while not done:
             mu, std = actor(torch.Tensor(state))
             action = actor.get_action(mu, std)
-            random_action = env.action_space.sample()
-            next_state, reward, done, info = env.step(random_action)
+            #random_action = env.action_space.sample()
+            next_state, reward, done, info = env.step(mu.detach().numpy())
             env.render()
 
             score += reward

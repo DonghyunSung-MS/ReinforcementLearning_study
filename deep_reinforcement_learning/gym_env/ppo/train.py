@@ -5,29 +5,30 @@ import gym
 import argparse
 import numpy as np
 from collections import deque
-
+from customizing_env.dyros_red import *
 import torch
 import torch.optim as optim
 
 from model import Actor, Critic
 from common.function import *
 from tensorboardX import SummaryWriter
+from common.Tensorboard2Csv import board2csv
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--env_name", type=str, default="Pendulum-v0")
+parser.add_argument("--env_name", type=str, default="Pendulum")
 parser.add_argument('--load_model', type=str, default=None)
-parser.add_argument('--save_path', default='./save_model/', help='')
+parser.add_argument('--save_path', default='./save_model/'+str("Pendulum")+'/', help='')
 parser.add_argument('--render', action="store_true", default=False)
 parser.add_argument('--gamma', type=float, default=0.99)
 parser.add_argument('--lamda', type=float, default=0.98)
-parser.add_argument('--hidden_size', type=int, default=64)
-parser.add_argument('--batch_size', type=int, default=64)
+parser.add_argument('--hidden_size', type=int, default=128)
+parser.add_argument('--batch_size', type=int, default=128)
 parser.add_argument('--actor_lr', type=float, default=1e-3)
 parser.add_argument('--critic_lr', type=float, default=1e-3)
 parser.add_argument('--model_update_num', type=int, default=10)
 parser.add_argument('--clip_param', type=float, default=0.2)
-parser.add_argument('--max_iter_num', type=int, default=500)
-parser.add_argument('--total_sample_size', type=int, default=2048)
+parser.add_argument('--max_iter_num', type=int, default=2000)
+parser.add_argument('--total_sample_size', type=int, default=2000)
 parser.add_argument('--log_interval', type=int, default=5)
 parser.add_argument('--goal_score', type=int, default=-300)
 parser.add_argument('--logdir', type=str, default='./logs',
@@ -44,7 +45,7 @@ def update(actor, critic, actor_optimizer, critic_optimizer,
     masks = list(trajectories[:,3])
 
     actions = torch.Tensor(actions).squeeze(1)
-    rewards = torch.Tensor(rewards).squeeze(1)
+    rewards = torch.Tensor(rewards).squeeze(-1)
     masks = torch.Tensor(masks)
 
     returns = cost_to_go(rewards, masks, args.gamma)
@@ -92,7 +93,8 @@ def update(actor, critic, actor_optimizer, critic_optimizer,
             actor_optimizer.step()
 
 def main(seed_num):
-    env = gym.make(args.env_name)
+    env = gym.make("Pendulum-v0")
+    #env = RedEnv()
     env.seed(seed_num)
     torch.manual_seed(seed_num)
 
@@ -130,11 +132,12 @@ def main(seed_num):
 
                 steps +=1
 
+                env.render()
+
                 mu, std = actor(torch.Tensor(state))
                 action = actor.get_action(mu, std)
-
                 next_state, reward, done, info = env.step(action)
-
+                #print(reward)
                 mask = 0 if done else 1
                 trajectories.append((state, action, reward, mask))
                 score += reward
@@ -144,7 +147,8 @@ def main(seed_num):
 
                 if done:
                     recent_rewards.append(score)
-
+                    if iter % args.log_interval:
+                        writer.add_scalar('log/ep_len',steps,episodes)
 
         actor.train(), critic.train()
         update(actor, critic, actor_optimizer, critic_optimizer,
@@ -152,19 +156,31 @@ def main(seed_num):
 
         writer.add_scalar('log/score',float(score),episodes)
 
+
         if iter % args.log_interval == 0:
-            print('{} iter | {} episode | score_avg: {:.2f}'.format(iter, episodes, np.mean(recent_rewards)))
+            tmp = np.array(recent_rewards)
+            mean_reward = tmp.mean()
+            std_reward =  tmp.std()
+            min_reward = tmp.min()
+            max_reward = tmp.max()
+            print('{} iter | {} episode | score_avg: {:.2f} | score_std: {:.2f} | score_min: {:.2f} | score_max: {:.2f}'.format(iter, episodes, mean_reward,
+                                                                                                                                                std_reward,
+                                                                                                                                                min_reward,
+                                                                                                                                                max_reward))
 
         if np.mean(recent_rewards) > args.goal_score:
             if not os.path.isdir(args.save_path):
                 os.makedirs(args.save_path)
 
-            ckpt_path_a = args.save_path + 'model_a.pth.tar'
-            ckpt_path_c = args.save_path + 'model_c.pth.tar'
+            ckpt_path_a = args.save_path + str(seed_num)+'th_model_a.pth.tar'
+            ckpt_path_c = args.save_path + str(seed_num)+'th_model_c.pth.tar'
             torch.save(actor.state_dict(), ckpt_path_a)
             torch.save(critic.state_dict(), ckpt_path_c)
-            print('Recent rewards exceed -300. So end')
+            print('Learning Terminated')
             break
 
 if __name__=='__main__':
-    main(10)
+    for i in range(5):
+        print(i,'th Try')
+        main(i*10)
+    board2csv(os.getcwd(),os.listdir(args.logdir),'ppo',args)

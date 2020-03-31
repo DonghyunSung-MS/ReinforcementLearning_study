@@ -1,0 +1,23 @@
+
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("--env_name", type=str, default="Pendulum")
+parser.add_argument('--load_model', type=str, default=None)
+parser.add_argument('--save_path', default='./save_model/'+str("Pendulum")+'/', help='')
+parser.add_argument('--render', action="store_true", default=False)
+parser.add_argument('--gamma', type=float, default=0.99)
+parser.add_argument('--lamda', type=float, default=0.98)
+parser.add_argument('--hidden_size', type=int, default=128)
+parser.add_argument('--batch_size', type=int, default=128)
+parser.add_argument('--actor_lr', type=float, default=1e-3)
+parser.add_argument('--critic_lr', type=float, default=1e-3)
+parser.add_argument('--model_update_num', type=int, default=10)
+parser.add_argument('--clip_param', type=float, default=0.2)
+parser.add_argument('--max_iter_num', type=int, default=2000)
+parser.add_argument('--total_sample_size', type=int, default=2000)
+parser.add_argument('--log_interval', type=int, default=5)
+parser.add_argument('--goal_score', type=int, default=-300)
+parser.add_argument('--logdir', type=str, default='./logs',
+                    help='tensorboardx logs directory')
+args = parser.parse_args()
+print(args.env_name)
