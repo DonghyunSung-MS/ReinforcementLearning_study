@@ -25,16 +25,20 @@ class Walker2dModify(mujoco_env.MujocoEnv, utils.EzPickle):
                                   #left_hip left_knee left_ankle]
         self.do_simulation(a, self.frame_skip)
         x, z, torso_pitch = self.sim.data.qpos[0:3]
-        #reward shaping
+
+        #Reward shaping
 
         x_dot = (x - x_) / self.dt
 
         alive_bonus = 1.0 #hyper parameters
         error = [(x_dot - self.target_vel), z-self.target_height, torso_pitch - self.target_torso_pitch ]
-        error_cost = np.square(error).sum()
-        ctrl_cost = np.square(a).sum()
+        Q = [1, 0.1 , 0.1]
 
-        weight = [0.8, -0.1, -0.1] #hyper parameters
+        error_cost = Q[0]*error[0]**2 + Q[1]*error[1]**2 + Q[2]*error[2]**2 
+        error_cost = math.exp(-error_cost)
+        ctrl_cost = math.exp(-np.square(a).sum())
+
+        weight = [0.6, 0.3, 0.1] #hyper parameters
         reward_ele = [alive_bonus, error_cost, ctrl_cost]
 
         reward = np.dot(weight,reward_ele)
@@ -45,10 +49,10 @@ class Walker2dModify(mujoco_env.MujocoEnv, utils.EzPickle):
 
         # partially observable state feature
 
-        state_feature = self._get_obs()#(x, z, torso_pitch,
+        observation = self._get_obs()#(x, z, torso_pitch,
                                  #       x_dot, z_dot, torso_pitch_dot)
 
-        return state_feature, reward, done, dict(alive_bonus = alive_bonus,
+        return observation, reward, done, dict(alive_bonus = alive_bonus,
                                                  error_cost = error_cost,
                                                  ctrl_cost = ctrl_cost)
 
@@ -75,7 +79,7 @@ class Walker2dModify(mujoco_env.MujocoEnv, utils.EzPickle):
         self.viewer.cam.elevation = -20
 
 '''
-env = Walker2dModify(0.5, 0)
+env = Walker2dModify(0.5, 0, 0.8)
 
 print(env.action_space.shape[0])
 print(env.observation_space.shape[0])
@@ -88,11 +92,12 @@ for i in range(1000):
     step = 0
     done = False
     while not done and step<3000:
-        obs, r, done, info = env.step(env.action_space.sample())
+        obs, r, done, info = env.step(np.zeros(7))
         step+=1
         random_reward+=r
         #print(r)
-    #env.render()
+        #env.render()
+        #print(obs[3],obs[2],obs[1])
     ep_list.append(random_reward)
 
 ep_list = np.array(ep_list)
